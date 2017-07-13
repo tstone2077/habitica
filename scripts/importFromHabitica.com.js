@@ -7,6 +7,7 @@ program
   .option('-u, --user-id [type]', 'Habitica.com\'s user id')
   .option('-a, --api-key [type]', 'Habitica.com\'s user\'s api key')
   .option('-c, --connection-string [type]', 'mongo-db connection string [mongodb://localhost:27017/habitrpg?auto_reconnect=true]', 'mongodb://mongo/habitrpg?auto_reconnect=true')
+  .option('-p, --no-party', 'Remove party association during import')
   .parse(process.argv);
 
 if (!program.userId) {
@@ -24,8 +25,11 @@ function insertTasks(db, tasks, type) {
     var count = 0;
     tasks.forEach((task) => {
       db.collection('tasks').insertOne( task, function (err, res) {
-        if (err) throw err;
-        count = count + 1;
+        if (err) {
+          console.log(err);
+        } else {
+          count = count + 1;
+        }
       });
     });
 }
@@ -78,6 +82,10 @@ https.get(options, function(res){
 
   res.on('end', function(){
     var resp = JSON.parse(body);
+    if (!program.party) {
+      console.log("Removing party from user info...");
+      resp.party = {}
+    }
     console.log("User data received. Importing...");
     ImportUser(resp);
   });
